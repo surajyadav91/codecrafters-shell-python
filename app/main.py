@@ -10,6 +10,9 @@ def main():
 
         command = input()
 
+        if command == "exit 0":
+            break
+
         if command not in valid_commands:
             print(f'{command}: command not found')
             continue
