@@ -15,7 +15,7 @@ def main():
 
         if command.split()[0] == "echo":
             print(" ".join(command.split()[1:]))
-            break
+            continue
 
         if command not in valid_commands:
             print(f'{command}: command not found')
