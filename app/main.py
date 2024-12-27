@@ -13,6 +13,10 @@ def main():
         if command == "exit 0":
             break
 
+        if command.split()[0] == "echo":
+            print(" ".join(command.split()[1:]))
+            break
+
         if command not in valid_commands:
             print(f'{command}: command not found')
             continue
