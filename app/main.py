@@ -1,9 +1,11 @@
 import sys
-
+import os
+from pathlib import Path
 
 def main():
     # Uncomment this block to pass the first stage
-    valid_commands = ["type", "echo", "exit"]
+    builtin_commands = ["type", "echo", "exit"]
+    path_env = os.getenv('PATH')
     while True:
         sys.stdout.write("$ ")
         sys.stdout.flush()
@@ -19,14 +21,23 @@ def main():
             continue
 
         elif args[0] == "type":
-            if args[1] in valid_commands:
+            if args[1] in builtin_commands:
                 print(f'{args[1]} is a shell builtin')
+            
             else:
-                print(f'{args[1]}: not found')
+                for path in path_env.split(':'):
+                    command_path = Path(path) / args[1]
+                    if command_path.is_file() and os.access(command_path, os.X_OK):
+                        print(f'{args[1]} is {command_path}')
+                        break
+                
+                else:
+                    print(f'{args[1]}: not found')
             
             continue
 
-        elif command not in valid_commands:
+
+        elif command not in builtin_commands:
             print(f'{command}: command not found')
             continue
 
