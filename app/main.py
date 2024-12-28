@@ -9,15 +9,16 @@ def main():
         sys.stdout.flush()
 
         command = input()
+        args = command.split()
 
         if command == "exit 0":
             break
 
-        if command.split()[0] == "echo":
-            print(" ".join(command.split()[1:]))
+        elif args[0] == "echo":
+            print(" ".join(args[1:]))
             continue
 
-        if command not in valid_commands:
+        elif command not in valid_commands:
             print(f'{command}: command not found')
             continue
 
