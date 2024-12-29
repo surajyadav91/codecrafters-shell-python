@@ -13,7 +13,7 @@ def locate_executable(command):
 
 def main():
     # Uncomment this block to pass the first stage
-    builtin_commands = ["type", "echo", "exit"]
+    builtin_commands = ["type", "echo", "exit", "pwd"]
     path_env = os.getenv('PATH')
     all_env_paths = path_env.split(':')
     while True:
@@ -45,8 +45,9 @@ def main():
             # run_result = subprocess.run([executable_path, *args[1:]], capture_output=True, text=True)
             subprocess.run([executable_path, *args[1:]])
 
-
-        elif command not in builtin_commands:
+        elif args[0] == "pwd":
+            print(Path.cwd().resolve())
+        else:
             print(f'{command}: command not found')
 
     # # Wait for user input
