@@ -2,6 +2,7 @@ import sys
 import os
 from pathlib import Path
 import subprocess
+import shlex
 
 def locate_executable(command):
     path = os.getenv('PATH')
@@ -21,13 +22,18 @@ def main():
         sys.stdout.flush()
 
         command = input()
-        args = command.split()
+        args = shlex.split(command)
 
         if command == "exit 0":
             break
 
-        elif args[0] == "echo":
-            print(" ".join(args[1:]))
+        elif command.startswith("echo "):
+            msg = command[5:]
+            if msg.startswith("'") and msg.endswith("'"):
+                msg = msg[1:-1]
+                print(msg)
+            else:
+                print(" ".join(shlex.split(msg)))
 
         elif args[0] == "type":
             if args[1] in builtin_commands:
@@ -49,7 +55,7 @@ def main():
             print(Path.cwd().resolve())
 
         elif args[0] == "cd":
-            ## expand user takes care of ~
+            ## expanduser() takes care of ~
             change_path = Path(args[1]).expanduser().resolve()
 
             if change_path.exists():
