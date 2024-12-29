@@ -13,7 +13,7 @@ def locate_executable(command):
 
 def main():
     # Uncomment this block to pass the first stage
-    builtin_commands = ["type", "echo", "exit", "pwd"]
+    builtin_commands = ["type", "echo", "exit", "pwd", "cd"]
     path_env = os.getenv('PATH')
     all_env_paths = path_env.split(':')
     while True:
@@ -47,6 +47,14 @@ def main():
 
         elif args[0] == "pwd":
             print(Path.cwd().resolve())
+
+        elif args[0] == "cd":
+            change_path = Path(args[1]).resolve()
+            if change_path.exists():
+                os.chdir(change_path)
+            else:
+                print(f'cd: {change_path}: No such file or directory')
+                
         else:
             print(f'{command}: command not found')
 
