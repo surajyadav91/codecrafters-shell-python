@@ -49,7 +49,9 @@ def main():
             print(Path.cwd().resolve())
 
         elif args[0] == "cd":
-            change_path = Path(args[1]).resolve()
+            ## expand user takes care of ~
+            change_path = Path(args[1]).expanduser().resolve()
+
             if change_path.exists():
                 os.chdir(change_path)
             else:
