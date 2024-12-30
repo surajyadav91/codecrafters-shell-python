@@ -20,7 +20,9 @@ def process_redirect(command):
     append_output_file = None
     error_file = None
     append_error_file = None
-    if '1>>' in command:
+    if '2>>' in command:
+        command, append_error_file = command.split('2>>')
+    elif '1>>' in command:
         command, append_output_file = command.split('1>>')
     elif '>>' in command:
         command, append_output_file = command.split('>>')
