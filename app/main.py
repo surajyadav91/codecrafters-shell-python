@@ -12,21 +12,30 @@ def locate_executable(command):
             return command_path
     return None
 
-def process_redirect(inp):
+def process_redirect(command):
     # inp = shlex.split(inp)
     # inp = " ".join(inp)
 
-    if '1>' in inp:
-        command, output_file = inp.split('1>')
-        return command, output_file, None
-    elif '2>' in inp:
-        command, output_file = inp.split('2>')
-        return command, None, output_file
-    elif '>' in inp:
-        command, output_file = inp.split('>')
-        return command, output_file, None
-    else:
-        return inp, None, None
+    output_file = None
+    append_output_file = None
+    error_file = None
+    append_error_file = None
+    if '1>>' in command:
+        command, append_output_file = command.split('1>>')
+    elif '>>' in command:
+        command, append_output_file = command.split('>>')
+    elif '1>' in command:
+        command, output_file = command.split('1>')
+    elif '2>' in command:
+        command, error_file = command.split('2>')
+    elif '>' in command:
+        command, output_file = command.split('>')
+    
+    return command, output_file, append_output_file, error_file, append_error_file
+
+def append_to_file(output_file, msg):
+    with open(output_file, 'a') as f:
+        f.write(msg)
     
 def write_to_file(output_file, msg):
     with open(output_file, 'w') as f:
@@ -44,13 +53,17 @@ def main():
         sys.stdout.flush()
 
         command = input()
-        args, output_file, error_file = process_redirect(command)
+        args, output_file, append_output_file, error_file, append_error_file = process_redirect(command)
         args = args.strip()
         command = args
         if output_file:
             output_file = output_file.strip()
         if error_file:
             error_file = error_file.strip()
+        if append_output_file:
+            append_output_file = append_output_file.strip()
+        if append_error_file:
+            append_error_file = append_error_file.strip()
         args = shlex.split(args)
     
         if command == "exit 0":
@@ -65,11 +78,15 @@ def main():
                 elif error_file:
                     write_to_file(error_file, "")
                     print(msg)
+                elif append_output_file:
+                    append_to_file(append_output_file, msg + "\n")
+                elif append_error_file:
+                    append_to_file(append_error_file, msg)
                 else:
                     print(msg)
             else:
                 if output_file:
-                    write_to_file(output_file, " ".join(shlex.split(msg) + "\n"))
+                    write_to_file(output_file, " ".join(shlex.split(msg)) + "\n")
                 else:
                     print(" ".join(shlex.split(msg)))
 
@@ -92,6 +109,12 @@ def main():
                     subprocess.run([executable_path, *args[1:]], stdout=f)
             elif error_file:
                 with open(error_file, "w") as f:
+                    subprocess.run([executable_path, *args[1:]], stderr=f)
+            elif append_output_file:
+                with open(append_output_file, "a") as f:
+                    subprocess.run([executable_path, *args[1:]], stdout=f)
+            elif append_error_file:
+                with open(append_error_file, "a") as f:
                     subprocess.run([executable_path, *args[1:]], stderr=f)
             else:
                 subprocess.run([executable_path, *args[1:]])
