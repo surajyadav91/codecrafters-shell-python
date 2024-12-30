@@ -4,6 +4,15 @@ from pathlib import Path
 import subprocess
 import shlex
 
+# def log(msg):
+#     print(os.getcwd())
+#     try:
+#         with open('log.txt', 'a') as f:
+#             f.write(msg + '\n')
+#     except Exception as e:
+#         print(f"error: {e}")
+#         raise e
+
 def locate_executable(command):
     path = os.getenv('PATH')
     for path in path.split(':'):
@@ -12,18 +21,42 @@ def locate_executable(command):
             return command_path
     return None
 
+def process_redirect(inp):
+    # inp = shlex.split(inp)
+    # inp = " ".join(inp)
+
+    if '1>' in inp:
+        command, output_file = inp.split('1>')
+        return command, output_file
+    elif '>' in inp:
+        command, output_file = inp.split('>')
+        return command, output_file
+    else:
+        return inp, None
+    
+def write_to_file(output_file, msg):
+    with open(output_file, 'w') as f:
+        f.write(msg + '\n')
+
+
 def main():
     # Uncomment this block to pass the first stage
     builtin_commands = ["type", "echo", "exit", "pwd", "cd"]
     path_env = os.getenv('PATH')
     all_env_paths = path_env.split(':')
+
     while True:
         sys.stdout.write("$ ")
         sys.stdout.flush()
 
         command = input()
-        args = shlex.split(command)
-
+        args, output_file = process_redirect(command)
+        args = args.strip()
+        command = args
+        if output_file:
+            output_file = output_file.strip()
+        args = shlex.split(args)
+    
         if command == "exit 0":
             break
 
@@ -31,9 +64,15 @@ def main():
             msg = command[5:]
             if msg.startswith("'") and msg.endswith("'"):
                 msg = msg[1:-1]
-                print(msg)
+                if output_file:
+                    write_to_file(output_file, msg)
+                else:
+                    print(msg)
             else:
-                print(" ".join(shlex.split(msg)))
+                if output_file:
+                    write_to_file(output_file, " ".join(shlex.split(msg)))
+                else:
+                    print(" ".join(shlex.split(msg)))
 
         elif args[0] == "type":
             if args[1] in builtin_commands:
@@ -48,8 +87,12 @@ def main():
                     print(f'{args[1]}: not found')
 
         elif executable_path := locate_executable(args[0]):
-            # run_result = subprocess.run([executable_path, *args[1:]], capture_output=True, text=True)
-            subprocess.run([executable_path, *args[1:]])
+
+            if output_file:
+                with open(output_file, "w") as f:
+                    subprocess.run([executable_path, *args[1:]], stdout=f)
+            else:
+                subprocess.run([executable_path, *args[1:]])
 
         elif args[0] == "pwd":
             print(Path.cwd().resolve())
