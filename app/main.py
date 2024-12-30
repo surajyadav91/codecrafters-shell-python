@@ -4,15 +4,6 @@ from pathlib import Path
 import subprocess
 import shlex
 
-# def log(msg):
-#     print(os.getcwd())
-#     try:
-#         with open('log.txt', 'a') as f:
-#             f.write(msg + '\n')
-#     except Exception as e:
-#         print(f"error: {e}")
-#         raise e
-
 def locate_executable(command):
     path = os.getenv('PATH')
     for path in path.split(':'):
@@ -27,16 +18,19 @@ def process_redirect(inp):
 
     if '1>' in inp:
         command, output_file = inp.split('1>')
-        return command, output_file
+        return command, output_file, None
+    elif '2>' in inp:
+        command, output_file = inp.split('2>')
+        return command, None, output_file
     elif '>' in inp:
         command, output_file = inp.split('>')
-        return command, output_file
+        return command, output_file, None
     else:
-        return inp, None
+        return inp, None, None
     
 def write_to_file(output_file, msg):
     with open(output_file, 'w') as f:
-        f.write(msg + '\n')
+        f.write(msg)
 
 
 def main():
@@ -50,11 +44,13 @@ def main():
         sys.stdout.flush()
 
         command = input()
-        args, output_file = process_redirect(command)
+        args, output_file, error_file = process_redirect(command)
         args = args.strip()
         command = args
         if output_file:
             output_file = output_file.strip()
+        if error_file:
+            error_file = error_file.strip()
         args = shlex.split(args)
     
         if command == "exit 0":
@@ -65,12 +61,15 @@ def main():
             if msg.startswith("'") and msg.endswith("'"):
                 msg = msg[1:-1]
                 if output_file:
-                    write_to_file(output_file, msg)
+                    write_to_file(output_file, msg + "\n")
+                elif error_file:
+                    write_to_file(error_file, "")
+                    print(msg)
                 else:
                     print(msg)
             else:
                 if output_file:
-                    write_to_file(output_file, " ".join(shlex.split(msg)))
+                    write_to_file(output_file, " ".join(shlex.split(msg) + "\n"))
                 else:
                     print(" ".join(shlex.split(msg)))
 
@@ -91,6 +90,9 @@ def main():
             if output_file:
                 with open(output_file, "w") as f:
                     subprocess.run([executable_path, *args[1:]], stdout=f)
+            elif error_file:
+                with open(error_file, "w") as f:
+                    subprocess.run([executable_path, *args[1:]], stderr=f)
             else:
                 subprocess.run([executable_path, *args[1:]])
 
